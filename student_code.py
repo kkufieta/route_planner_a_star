@@ -23,7 +23,7 @@ class State:
         self.path = path
 
 class AStar:
-    def __init__(self, intersections=None, roads = None, goal_id = None):
+    def __init__(self, intersections=None, roads=None, goal_id=None):
         """
         Initializes A* Search.
         """
@@ -68,6 +68,9 @@ class AStar:
         return not_explored and up_to_date
     
     def get_new_state(self, state, new_state_id):
+        """
+        Calculates the cost and returns a new state.
+        """
         new_path_cost = state.path_cost + self.euclidean_distance(state.id, new_state_id)
         new_est_distance = self.calc_est_distance(new_state_id)
         new_path = state.path + [new_state_id]
@@ -78,7 +81,7 @@ class AStar:
 
     def a_star_search(self):
         """
-        A* search to find shortest path from starlidt to goal.
+        A* search to find shortest path from start to goal.
         """
         # Repeat the following until is_goal() is true or there are no more states on the min_pq.
         debug_print(f"Before the search starts, min_pq: {self.min_pq}")
@@ -103,8 +106,9 @@ class AStar:
             if self.is_goal(state):
                 return state.path
 
-            # Mark the state as explored.
+            # Mark the state as explored and remove it from the frontier.
             self.explored.add(state.id)
+            del self.frontier[state.id]
 
             # Look up and loop through all connections of the state.
             for new_state_id in self.roads[state.id]:
@@ -123,7 +127,8 @@ class AStar:
                 # If it is not a more optimal path, we ignore it.
                 # If it is unexplored, we're simply adding it to the frontier and min_pq.
                 # Both positive cases are handled the same way.
-                if new_state.id not in self.frontier or (new_state.total_cost < self.frontier[new_state.id].total_cost):
+                is_unexplored = new_state.id not in self.frontier and new_state.id not in self.explored
+                if is_unexplored or (new_state.total_cost < self.frontier[new_state.id].total_cost):
                     self.frontier[new_state.id] = new_state
                     heapq.heappush(self.min_pq, (new_state.total_cost, new_state.id))
 
@@ -158,13 +163,13 @@ class AStar:
 
 
 def shortest_path(M, start_id, goal_id):
-    print(f"\n======= Start Search for (start, goal): ({start_id}, {goal_id}) =======\n")
+    debug_print(f"\n======= Start Search for (start, goal): ({start_id}, {goal_id}) =======\n")
     if start_id == goal_id:
         path = [start_id]
     else:
         a_star = AStar()
         path = a_star.shortest_path(M, start_id, goal_id)
-    print(f"\nRESULT: {path}")
+    debug_print(f"\nRESULT: {path}")
     return path
 
 def debug_print(text):
